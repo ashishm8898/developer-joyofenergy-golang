@@ -14,8 +14,9 @@ import (
 	"joi-energy-golang/endpoint/readings"
 	"joi-energy-golang/repository"
 )
+
 const (
-	serverPort  = "localhost:8080"
+	serverPort = "localhost:8080"
 )
 
 // Run starts the HTTP server
@@ -66,6 +67,8 @@ func setUpServer() http.Handler {
 	readingsService := readings.NewService(readingsLogger, &meterReadings)
 	mux.Handle("/readings/store", readings.MakeStoreReadingsHandler(readingsService, readingsLogger))
 	mux.Handle("/readings/read/", readings.MakeGetReadingsHandler(readingsService, readingsLogger))
+
+	mux.Handle("/usage/cost/", readings.GetusageCostHandler(readingsService, readingsLogger))
 
 	pricePlansLogger := log.WithField("endpoint", "pricePlans")
 	pricePlansService := priceplans.NewService(pricePlansLogger, &pricePlans, &accounts)

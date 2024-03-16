@@ -69,6 +69,42 @@ func MakeGetReadingsHandler(
 	return endpointHandler
 }
 
+func GetusageCostHandler(
+	s Service,
+	logger *logrus.Entry,
+) http.Handler {
+	opts := []kithttp.ServerOption{
+		kithttp.ServerBefore(serveroption.ExtractAcceptHeaderIntoContext),
+		kithttp.ServerErrorHandler(transport.NewLogErrorHandler(kitlogrus.NewLogrusLogger(logger))),
+		kithttp.ServerErrorEncoder(middleware.MakeEncodeErrorFunc(logger)),
+	}
+
+	mw := endpoint.Chain(
+		middleware.MakeAcceptHeaderValidationMiddleware(),
+	)
+
+	// response := map[string]float64{
+	// 	"cost": cost,
+	// }
+
+	endpointHandler := kithttp.NewServer(
+		mw(GetusageCostEndpoint(s)),
+		decodeSmartMeterIdFromRequest,
+		mhttp.EncodeResponse,
+		opts...,
+	)
+
+	return endpointHandler
+}
+
+// func calulateAverage(readings []float64) float64 {
+// 	var total float64
+// 	for _, value := range readings {
+// 		total += value
+// 	}
+// 	return total / float64(len(readings))
+// }
+
 func decodeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	var request domain.StoreReadings
 	err := mhttp.DecodeRequest(ctx, r, &request)
